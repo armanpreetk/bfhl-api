@@ -12,6 +12,12 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.get("/bfhl", (req, res) => {
+  res.json({
+    status: "working"
+  });
+});
+
 app.post("/bfhl", (req, res) => {
   try {
     const data = req.body.data || [];
