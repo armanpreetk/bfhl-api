@@ -1,54 +1,82 @@
 import express from "express";
 import dotenv from "dotenv";
-import axios from "axios";
 
 dotenv.config();
+
 const app = express();
 app.use(express.json());
 
-const EMAIL = process.env.OFFICIAL_EMAIL;
-
-const fibonacci = (n) => {
-  const arr = [0, 1];
-  for (let i = 2; i < n; i++) arr.push(arr[i - 1] + arr[i - 2]);
-  return arr.slice(0, n);
-};
-
-const isPrime = (n) => {
-  if (n < 2) return false;
-  for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
-  return true;
-};
-
-const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
-const hcf = (arr) => arr.reduce((a, b) => gcd(a, b));
-const lcm = (arr) => arr.reduce((a, b) => (a * b) / gcd(a, b));
-
 app.get("/health", (req, res) => {
-  res.json({ is_success: true, official_email: EMAIL });
+  res.json({
+    is_success: true
+  });
 });
 
-app.post("/bfhl", async (req, res) => {
+app.post("/bfhl", (req, res) => {
   try {
-    const key = Object.keys(req.body)[0];
-    let data;
+    const data = req.body.data || [];
 
-    if (key === "fibonacci") data = fibonacci(req.body[key]);
-    else if (key === "prime") data = req.body[key].filter(isPrime);
-    else if (key === "lcm") data = lcm(req.body[key]);
-    else if (key === "hcf") data = hcf(req.body[key]);
-    else if (key === "AI") {
-      const r = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        { contents: [{ parts: [{ text: req.body[key] }] }] }
-      );
-      data = r.data.candidates[0].content.parts[0].text.split(" ")[0];
-    } else throw new Error("Invalid key");
+    const odd_numbers = [];
+    const even_numbers = [];
+    const alphabets = [];
+    const special_characters = [];
 
-    res.json({ is_success: true, official_email: EMAIL, data });
-  } catch (e) {
-    res.status(400).json({ is_success: false, official_email: EMAIL });
+    let sum = 0;
+    let alphaString = "";
+
+    data.forEach((item) => {
+      const str = String(item);
+
+      if (/^\d+$/.test(str)) {
+        const num = parseInt(str);
+
+        sum += num;
+
+        if (num % 2 === 0) {
+          even_numbers.push(str);
+        } else {
+          odd_numbers.push(str);
+        }
+      } else if (/^[A-Za-z]+$/.test(str)) {
+        alphabets.push(str.toUpperCase());
+        alphaString += str;
+      } else {
+        special_characters.push(str);
+      }
+    });
+
+    const reversed = alphaString.split("").reverse();
+
+    let concat_string = "";
+
+    reversed.forEach((ch, index) => {
+      concat_string += index % 2 === 0
+        ? ch.toUpperCase()
+        : ch.toLowerCase();
+    });
+
+    res.status(200).json({
+      is_success: true,
+      user_id: "armanpreet_kaur_DDMMYYYY",
+      email: "YOUR_EMAIL",
+      roll_number: "YOUR_ROLL_NUMBER",
+      odd_numbers,
+      even_numbers,
+      alphabets,
+      special_characters,
+      sum: sum.toString(),
+      concat_string
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      is_success: false
+    });
   }
 });
 
-app.listen(process.env.PORT || 3000);
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
